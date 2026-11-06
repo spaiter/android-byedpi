@@ -42,10 +42,36 @@
 #endif
 
 
+#ifdef ANDROID_APP
+__thread int server_fd;
+#else
 int server_fd;
+#endif
+
+int byedpi_shutdown_server(void) {
+    if (server_fd <= 0) {
+        return -1;
+    }
+    return shutdown(server_fd, SHUT_RDWR);
+}
+
+int byedpi_server_port(void) {
+    if (server_fd <= 0) {
+        return 0;
+    }
+    union sockaddr_u addr;
+    socklen_t addr_len = sizeof(addr);
+    if (getsockname(server_fd, &addr.sa, &addr_len) < 0) {
+        return 0;
+    }
+    if (addr.sa.sa_family == AF_INET6) {
+        return ntohs(addr.in6.sin6_port);
+    }
+    return ntohs(addr.in.sin_port);
+}
 
 static void on_cancel(int sig) {
-    shutdown(server_fd, SHUT_RDWR);
+    byedpi_shutdown_server();
 }
 
 void dump_all_cache(void);
@@ -1015,6 +1041,9 @@ int on_ignore(struct poolhd *pool, struct eval *val, int etype)
 int start_event_loop(int srvfd)
 {
     server_fd = srvfd;
+    #ifdef ANDROID_APP
+    byedpi_android_listener_ready(srvfd);
+    #endif
     
     struct poolhd *pool = init_pool(params.max_open * 2 + 1);
     if (!pool) {

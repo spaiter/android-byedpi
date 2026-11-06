@@ -61,9 +61,15 @@ static int unie(int e)
     #define LOG_E ANDROID_LOG_ERROR
     #define LOG_S ANDROID_LOG_DEBUG
     #define LOG_L ANDROID_LOG_VERBOSE
-    #define LOG(s, str, ...) \
-        __android_log_print(s, "proxy", str, ##__VA_ARGS__)
-    #define LOG_ENABLED 1
+    static void LOG(int s, const char *str, ...) {
+        if (s == LOG_E || params.debug >= s) {
+            va_list args;
+            va_start(args, str);
+            __android_log_vprint(s, "proxy", str, args);
+            va_end(args);
+        }
+    }
+    #define LOG_ENABLED (params.debug >= LOG_S)
 #else
     #define LOG_E -1
     #define LOG_S 1

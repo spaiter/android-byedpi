@@ -1,7 +1,9 @@
 #ifndef DESYNC_H
 #define DESYNC_H
 
+#ifndef STR_MODE
 #define STR_MODE
+#endif
 
 #include <stdint.h>
 #include <stddef.h>

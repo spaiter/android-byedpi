@@ -110,4 +110,12 @@ int start_event_loop(int srvfd);
 
 int run(const union sockaddr_u *srv);
 
+#ifdef ANDROID_APP
+void byedpi_android_listener_ready(int server_fd);
+#endif
+
+int byedpi_shutdown_server(void);
+
+int byedpi_server_port(void);
+
 #endif

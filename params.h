@@ -173,7 +173,11 @@ struct params {
     int pid_fd;
 };
 
+#ifdef ANDROID_APP
+extern __thread struct params params;
+#else
 extern struct params params;
+#endif
 
 extern struct packet fake_tls;
 extern struct packet fake_http;

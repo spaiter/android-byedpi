@@ -44,7 +44,11 @@ fake_udp = {
 };
 
 
+#ifdef ANDROID_APP
+__thread struct params params = {
+#else
 struct params params = {
+#endif
     .await_int = 10,
     
     .ipv6 = 1,
@@ -775,7 +779,7 @@ int parse_args(int argc, char **argv)
             
         case 'p':
             val = strtol(optarg, &end, 0);
-            if (val <= 0 || val > 0xffff || *end)
+            if (val < 0 || val > 0xffff || *end)
                 invalid = 1;
             else
                 params.laddr.in.sin_port = htons(val);

@@ -14,6 +14,7 @@
 #endif
 
 #include <string.h>
+#include <stddef.h>
 #include <assert.h>
 
 #include "proxy.h"
@@ -23,6 +24,9 @@
 #include "desync.h"
 #include "packets.h"
 
+#ifdef ANDROID_APP
+extern int byedpi_android_protect_fd(int conn_fd);
+#endif
 
 static int set_timeout(int fd, unsigned int s)
 {
@@ -821,7 +825,11 @@ ssize_t udp_hook(struct eval *val,
 #ifdef __linux__
 static int protect(int conn_fd, const char *path)
 {
-    struct sockaddr_un sa;
+#ifdef ANDROID_APP
+    (void)path;
+    return byedpi_android_protect_fd(conn_fd);
+#else
+    struct sockaddr_un sa = {0};
     sa.sun_family = AF_UNIX;
     strcpy(sa.sun_path, path);
     
@@ -834,7 +842,8 @@ static int protect(int conn_fd, const char *path)
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
     
-    int err = connect(fd, (struct sockaddr *)&sa, sizeof(sa));
+    socklen_t sa_len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(sa.sun_path) + 1);
+    int err = connect(fd, (struct sockaddr *)&sa, sa_len);
     if (err) {
         uniperror("connect");
         close(fd);
@@ -868,5 +877,6 @@ static int protect(int conn_fd, const char *path)
     }
     close(fd);
     return 0;
+#endif
 }
 #endif
